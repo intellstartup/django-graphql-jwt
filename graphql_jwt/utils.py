@@ -34,25 +34,34 @@ def jwt_payload(user, context=None):
 
 
 def jwt_encode(payload, context=None):
-    return jwt.encode(
-        payload,
-        jwt_settings.JWT_PRIVATE_KEY or jwt_settings.JWT_SECRET_KEY,
-        jwt_settings.JWT_ALGORITHM,
-    ).decode('utf-8')
+    try:
+        # Python 2: "unicode" is built-in
+        unicode
+        return jwt.encode(
+            payload,
+            jwt_settings.JWT_PRIVATE_KEY or jwt_settings.JWT_SECRET_KEY,
+            jwt_settings.JWT_ALGORITHM,
+        ).decode('utf-8')
+    except NameError:
+        return jwt.encode(
+            payload,
+            jwt_settings.JWT_PRIVATE_KEY or jwt_settings.JWT_SECRET_KEY,
+            jwt_settings.JWT_ALGORITHM,
+        )
 
 
 def jwt_decode(token, context=None):
     return jwt.decode(
         token,
         jwt_settings.JWT_PUBLIC_KEY or jwt_settings.JWT_SECRET_KEY,
-        jwt_settings.JWT_VERIFY,
+        algorithms=[jwt_settings.JWT_ALGORITHM],
         options={
+            'verify_signature': jwt_settings.JWT_VERIFY,
             'verify_exp': jwt_settings.JWT_VERIFY_EXPIRATION,
         },
         leeway=jwt_settings.JWT_LEEWAY,
         audience=jwt_settings.JWT_AUDIENCE,
-        issuer=jwt_settings.JWT_ISSUER,
-        algorithms=[jwt_settings.JWT_ALGORITHM],
+        issuer=jwt_settings.JWT_ISSUER
     )
 
 
@@ -84,7 +93,7 @@ def get_credentials(request, **kwargs):
 def get_payload(token, context=None):
     try:
         payload = jwt_settings.JWT_DECODE_HANDLER(token, context)
-    except jwt.ExpiredSignature:
+    except jwt.ExpiredSignatureError:
         raise exceptions.JSONWebTokenExpired()
     except jwt.DecodeError:
         raise exceptions.JSONWebTokenError(_('Error decoding signature'))
