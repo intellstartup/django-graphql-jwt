@@ -34,20 +34,11 @@ def jwt_payload(user, context=None):
 
 
 def jwt_encode(payload, context=None):
-    try:
-        # Python 2: "unicode" is built-in
-        unicode
-        return jwt.encode(
-            payload,
-            jwt_settings.JWT_PRIVATE_KEY or jwt_settings.JWT_SECRET_KEY,
-            jwt_settings.JWT_ALGORITHM,
-        ).decode('utf-8')
-    except NameError:
-        return jwt.encode(
-            payload,
-            jwt_settings.JWT_PRIVATE_KEY or jwt_settings.JWT_SECRET_KEY,
-            jwt_settings.JWT_ALGORITHM,
-        )
+    return jwt.encode(
+        payload,
+        jwt_settings.JWT_PRIVATE_KEY or jwt_settings.JWT_SECRET_KEY,
+        jwt_settings.JWT_ALGORITHM,
+    ).decode('utf-8')
 
 
 def jwt_decode(token, context=None):
